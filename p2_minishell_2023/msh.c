@@ -17,6 +17,7 @@
 #include <signal.h>
 #include <time.h>
 #include <pthread.h>
+#include <signal.h>
 
 #define MAX_COMMANDS 8
 
@@ -48,6 +49,59 @@ void* timer_run ( )
 		mytime++;
 	}
 }
+
+void controlC(int s){
+	printf("The signal worked. Time: %d/n", s);
+	return 0;
+}
+
+
+int read_command(char ***argvv, char **filev, int *bg){
+	int fd, num_mandatos = 0, longitud, i;
+	struct signation cero;
+
+	/*Cuando se pulsa control C*/
+	cero.sa_handler = controlC;
+	cero.sa_flags = 0;
+	sigemptyset(&(cero.sa_mark));
+	signation(SIGINT, &cero, NULL);
+
+	/*Posicion del fichero*/
+	if (filev[0] != NULL){
+		printf("Fichero %s con redireccionamiento de entrada(<).", file[0]);
+	}
+	else if (filev[1] != NULL){
+		printf("Fichero %s con redireccionamiento de salida(>).", file[1]);
+	}
+	else if (filev[2]!= NULL){
+		printf("Fichero %s con redireccionamiento de salida de error(!>).", file[2]);
+	}
+	else {
+		printf("Ningun fichero se usa como redireccion.");
+	}
+
+	/*Proceso background*/
+	if (bg == 0){
+		printf("Proceso not background.");
+	}
+	else {
+		printf("Proceso en background");
+	}
+
+
+
+	/*Imprimir mandatos de argvv con un bucle for*/
+	longitud = sizeof(argvv);
+	for (i=0, i<longitud, i++){
+		printf("Mandato numero %d = %s/n", i, argvv[i][0]);
+		num_mandatos++;
+		if (argvv[i][1] != NULL){
+			printf("Argumento %d = %s/n", i argvv[i][1]);
+		}
+	}
+	return num_mandatos;
+}
+
 
 /**
  * Get the command with its parameters for execvp
