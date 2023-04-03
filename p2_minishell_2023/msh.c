@@ -146,42 +146,34 @@ int main(int argc, char* argv[])
 			else {
 				// Print command
 				print_command(argvv, filev, in_background);
-			} pid = fork();
-			/*Si está entre 0 y 8, entonces podemos ejecutar los comandos desde el hijo*/
-			switch(pid){
-				case '-1': perror("Error en el fork");
-						   break;
-				case '0': printf("El hijo");
-						  execvp(argvv[0][0], argvv[0][0], argvv[0][1], NULL);
-						  exit(-1);
-				case '1': printf("El padre");
-						  wait(&espera);
-						  break;
-			}
-		
-		}
-		/* Comandos simples */
-		if (command_counter == 1) {
-			int pid;
-			if (background == 0) {
-				pid = fork();
-				if (pid == 0) {
-					execvp(argvv[0][0], argvv[0]);
+			} 
+
+			/* Comandos simples */
+			if (command_counter == 1) {
+				int pid;
+				if (background == 0) {
+					pid = fork();
+					switch(pid) {
+						case '-1': perror("Error en el fork");
+							   	   break;
+						case '0':  execvp(argvv[0][0], argvv[0]);
+							       exit(-1);
+						case '1':  wait(&status);
+							       break;
+					}
 				}
 				else {
-					wait(&status);
+					pid = fork();
+					switch(pid) {
+						case '-1': perror("Error en el fork");
+							   	   break;
+						case '0':  execvp(argvv[0][0], argvv[0]);
+							       exit(-1);
+					}
 				}
+		
 			}
-			else {
-				pid = fork();
-				if (pid == 0) {
-					execvp(argvv[0][0], argvv[0]);
-				}
-			}
-		}
 
-
-		}
 	}
 	
 	return 0;
