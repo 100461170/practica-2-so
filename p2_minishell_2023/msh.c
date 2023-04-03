@@ -160,6 +160,11 @@ int main(int argc, char* argv[])
 			}
 		
 		}
+		/* Comandos simples, sin background */
+		if (command_counter == 1) {
+
+
+		}
 	}
 	
 	return 0;
