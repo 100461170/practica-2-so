@@ -160,8 +160,25 @@ int main(int argc, char* argv[])
 			}
 		
 		}
-		/* Comandos simples, sin background */
+		/* Comandos simples */
 		if (command_counter == 1) {
+			int pid;
+			if (background == 0) {
+				pid = fork();
+				if (pid == 0) {
+					execvp(argvv[0][0], argvv[0]);
+				}
+				else {
+					wait(&status);
+				}
+			}
+			else {
+				pid = fork();
+				if (pid == 0) {
+					execvp(argvv[0][0], argvv[0]);
+				}
+			}
+		}
 
 
 		}
