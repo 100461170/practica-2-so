@@ -50,46 +50,6 @@ void* timer_run ( )
 	}
 }
 
-void controlC(int s){
-	printf("The signal worked. Time: %d/n", s);
-	return 0;
-}
-
-
-int read_command(char ***argvv, char **filev, int *bg){
-	int fd, num_mandatos = 0, longitud, i;
-	struct signation cero;
-
-	/*Cuando se pulsa control C*/
-	cero.sa_handler = controlC;
-	cero.sa_flags = 0;
-	sigemptyset(&(cero.sa_mark));
-	signation(SIGINT, &cero, NULL);
-
-	/*Posicion del fichero*/
-	if (filev[0] != NULL){
-		printf("Fichero %s con redireccionamiento de entrada(<).", file[0]);
-	}
-	else if (filev[1] != NULL){
-		printf("Fichero %s con redireccionamiento de salida(>).", file[1]);
-	}
-	else if (filev[2]!= NULL){
-		printf("Fichero %s con redireccionamiento de salida de error(!>).", file[2]);
-	}
-	else {
-		printf("Ningun fichero se usa como redireccion.");
-	}
-
-	/*Proceso background*/
-	if (bg == 0){
-		printf("Proceso not background.");
-	}
-	else {
-		printf("Proceso en background");
-	}
-
-
-
 	/*Imprimir mandatos de argvv con un bucle for*/
 	longitud = sizeof(argvv);
 	for (i=0, i<longitud, i++){
@@ -128,6 +88,7 @@ int main(int argc, char* argv[])
 {
 	/**** Do not delete this code.****/
 	int end = 0; 
+	int pid, espera;
 	int executed_cmd_lines = -1;
 	char *cmd_line = NULL;
 	char *cmd_lines[10];
@@ -185,9 +146,59 @@ int main(int argc, char* argv[])
 			else {
 				// Print command
 				print_command(argvv, filev, in_background);
+			} pid = fork();
+			/*Si está entre 0 y 8, entonces podemos ejecutar los comandos desde el hijo*/
+			switch(pid){
+				case '-1': perror("Error en el fork");
+						   break;
+				case '0': printf("El hijo");
+						  execvp(argvv[0][0], argvv[0][0], argvv[0][1], NULL);
+						  exit(-1);
+				case '1': printf("El padre");
+						  wait(&espera);
+						  break;
 			}
+		
 		}
 	}
 	
 	return 0;
 }
+
+void controlC(int s){
+	printf("The signal worked. Time: %d/n", s);
+	return 0;
+}
+
+
+int read_command(char ***argvv, char **filev, int *bg){
+	int fd, num_mandatos = 0, longitud, i;
+	struct signation cero;
+
+	/*Cuando se pulsa control C*/
+	cero.sa_handler = controlC;
+	cero.sa_flags = 0;
+	sigemptyset(&(cero.sa_mark));
+	signation(SIGINT, &cero, NULL);
+
+	/*Posicion del fichero*/
+	if (filev[0] != NULL){
+		printf("Fichero %s con redireccionamiento de entrada(<).", file[0]);
+	}
+	else if (filev[1] != NULL){
+		printf("Fichero %s con redireccionamiento de salida(>).", file[1]);
+	}
+	else if (filev[2]!= NULL){
+		printf("Fichero %s con redireccionamiento de salida de error(!>).", file[2]);
+	}
+	else {
+		printf("Ningun fichero se usa como redireccion.");
+	}
+
+	/*Proceso background*/
+	if (bg == 0){
+		printf("Proceso not background.");
+	}
+	else {
+		printf("Proceso en background");
+	}
