@@ -17,7 +17,6 @@
 #include <signal.h>
 #include <time.h>
 #include <pthread.h>
-#include <signal.h>
 
 #define MAX_COMMANDS 8
 
@@ -49,8 +48,6 @@ void* timer_run ( )
 		mytime++;
 	}
 }
-
-
 
 /**
  * Get the command with its parameters for execvp
@@ -166,4 +163,30 @@ int main(int argc, char* argv[])
 	
 	return 0;
 }
+}
+/*Con Acc es una variable de entorno, se crea fuera de la función.*/
+int valor_Acc = 0;
+
+void mycalc(int argc, char *argv[]){
+	/*Si hay menos de 5 argumentos (programa, entorno del archivo, operador1, operación y operador2), salta error.*/
+	int resultado, resto;
+	if (argc < 5){
+		perror("La estructura del comando es mycalc %d %s %d\n", argv[2], argv[3], argv[4]);
+		return -1;
+	}
+	switch(argv[3]){
+		case 'add': resultado = argv[2] + argv[4];
+					valor_Acc = valor_Acc + resultado;
+					printf("[OK] %d + %d = %d, Acc %d\n", argv[2], argv[4], resultado, valor_Acc);
+					break;
+		case 'mul': resultado = argv[2]*argv[4];
+					printf("[OK] %d * %d = %d\n", argv[2], argv[4], resultado);
+					break;
+		case 'div': resultado = argv[2]/argv[4];
+					resto = argv[2] % argv[4];
+					printf("[OK] %d/%d = %d, Resto %d\n", argv[2], argv[4], resultado), resto;
+					break;
+		default: perror("La estructura del comando es mycalc %d %s %d\n", argv[2], argv[3], argv[4]);
+				 return -1;
+	}
 }
