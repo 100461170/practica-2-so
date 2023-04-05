@@ -103,7 +103,7 @@ int main(int argc, char* argv[])
 		int status = 0;
 		int command_counter = 0;
 		int in_background = 0;
-        int valor, pipeid0, status;
+        int valor, pipeid0;
         pid_t pid;
         int pipeid[2];
 		signal(SIGINT, siginthandler);
@@ -135,13 +135,13 @@ int main(int argc, char* argv[])
             if (command_counter == 1) {
                 pid = fork();
                 switch(pid) {
-                    case '-1':
+                    case -1:
                         perror("Error en el fork");
                         break;
-                    case '0':
+                    case 0:
                         execvp(argvv[0][0], argvv[0]);
                         exit(-1);
-                    case '1':
+                    case 1:
                         if (in_background == 0) {
                             wait(&status); }
                         break; }}
@@ -172,8 +172,8 @@ int main(int argc, char* argv[])
                             close(pipeid[1]); }
                         execvp(argvv[p][0], argvv[p]);
                         perror("execvp: ");
-                        exit(-1)};
-                    else if (pid > 0) {
+                        exit(-1);}
+                    else {
                         if (p != command_counter - 1) {
                             pipeid0 = pipeid[0];
                             close(pipeid[1]); }
@@ -193,59 +193,63 @@ int main(int argc, char* argv[])
 	return 0;
 }
 }
+
+
 /*Con Acc es una variable de entorno, se crea fuera de la función.*/
+
+
 int valor_Acc = 0;
 
 void mycalc(int argc, char *argv[]){
-	/*Si hay menos de 5 argumentos (programa, entorno del archivo, operador1, operación y operador2), salta error.*/
-	int resultado, resto;
-	if (argc < 5){
-		perror("La estructura del comando es mycalc %d %s %d\n", argv[2], argv[3], argv[4]);
-		return -1;
-	}
-	switch(argv[3]){
-		case 'add': resultado = argv[2] + argv[4];
-					valor_Acc = valor_Acc + resultado;
-					printf("[OK] %d + %d = %d, Acc %d\n", argv[2], argv[4], resultado, valor_Acc);
-					break;
-		case 'mul': resultado = argv[2]*argv[4];
-					printf("[OK] %d * %d = %d\n", argv[2], argv[4], resultado);
-					break;
-		case 'div': resultado = argv[2]/argv[4];
-					resto = argv[2] % argv[4];
-					printf("[OK] %d/%d = %d, Resto %d\n", argv[2], argv[4], resultado), resto;
-					break;
-		default: perror("La estructura del comando es mycalc %d %s %d\n", argv[2], argv[3], argv[4]);
-				 return -1;
-	}
+    /*Si hay menos de 5 argumentos (programa, entorno del archivo, operador1, operación y operador2), salta error.*/
+    int resultado, resto;
+    if (argc < 5){
+        perror("La estructura del comando es mycalc %d %s %d\n", argv[2], argv[3], argv[4]);
+        return -1;
+    }
+    switch(argv[3]){
+        case 'add': resultado = argv[2] + argv[4];
+            valor_Acc = valor_Acc + resultado;
+            printf("[OK] %d + %d = %d, Acc %d\n", argv[2], argv[4], resultado, valor_Acc);
+            break;
+        case 'mul': resultado = argv[2]*argv[4];
+            printf("[OK] %d * %d = %d\n", argv[2], argv[4], resultado);
+            break;
+        case 'div': resultado = argv[2]/argv[4];
+            resto = argv[2] % argv[4];
+            printf("[OK] %d/%d = %d, Resto %d\n", argv[2], argv[4], resultado), resto;
+            break;
+        default: perror("La estructura del comando es mycalc %d %s %d\n", argv[2], argv[3], argv[4]);
+            return -1;
+    }
 }
 
 void print_mytime(){
-	unsigned milisegundos, segundos, minutos, horas, tiempo;
-	char *horario[] = (char*)malloc(sizeof(char)*1024);
-	char subcadena[21];
-	/*Como mytime está en milisegundos, es necesario sacar los segundos, minutos y horas.*/
-	/*Los milisegundos son el resto del paso a segundos.*/
-	tiempo = mytime/1000;
-	milisegundos = mytime % 1000;
-	sprintf(subcadena, "%lu", milisegundos);
-	horario = "." + subcadena;
-	/*Los segundos son el resto del paso a minutos.*/
-	tiempo = tiempo/60;
-	segundos = tiempo % 60;
-	sprintf(subcadena, "%u", segundos);
-	if (segundos <10){
-		horario = ":0" + subcadena + horario;}
-	else {horario = ":" + subcadena + horario;}
-	/*Los minutos son el resto del paso a horas. Las horas se dejan como tal.*/
-	horas = tiempo/60;
-	minutos = tiempo % 60;
-	sprintf(subcadena, "%u", minutos);
-	if (minutos <10){
-		horario = ":0" + subcadena + horario;}
-	else {horario = ":" + subcadena + horario;}
-	sprintf(subcadena, "%u", horas);
-	horario = horas + horario;
-	printf(horario);
-	free(horario);
+    unsigned milisegundos, segundos, minutos, horas, tiempo;
+    char *horario[] = (char*)malloc(sizeof(char)*1024);
+    char subcadena[21];
+    /*Como mytime está en milisegundos, es necesario sacar los segundos, minutos y horas.*/
+    /*Los milisegundos son el resto del paso a segundos.*/
+    tiempo = mytime/1000;
+    milisegundos = mytime % 1000;
+    sprintf(subcadena, "%lu", milisegundos);
+    horario = "." + subcadena;
+    /*Los segundos son el resto del paso a minutos.*/
+    tiempo = tiempo/60;
+    segundos = tiempo % 60;
+    sprintf(subcadena, "%u", segundos);
+    if (segundos <10){
+        horario = ":0" + subcadena + horario;}
+    else {horario = ":" + subcadena + horario;}
+    /*Los minutos son el resto del paso a horas. Las horas se dejan como tal.*/
+    horas = tiempo/60;
+    minutos = tiempo % 60;
+    sprintf(subcadena, "%u", minutos);
+    if (minutos <10){
+        horario = ":0" + subcadena + horario;}
+    else {horario = ":" + subcadena + horario;}
+    sprintf(subcadena, "%u", horas);
+    horario = horas + horario;
+    printf(horario);
+    free(horario);
 }
