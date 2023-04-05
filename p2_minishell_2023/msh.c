@@ -190,3 +190,33 @@ void mycalc(int argc, char *argv[]){
 				 return -1;
 	}
 }
+
+void print_mytime(){
+	unsigned milisegundos, segundos, minutos, horas, tiempo;
+	char *horario[] = (char*)malloc(sizeof(char)*1024);
+	char subcadena[21];
+	/*Como mytime está en milisegundos, es necesario sacar los segundos, minutos y horas.*/
+	/*Los milisegundos son el resto del paso a segundos.*/
+	tiempo = mytime/1000;
+	milisegundos = mytime % 1000;
+	sprintf(subcadena, "%lu", milisegundos);
+	horario = "." + subcadena;
+	/*Los segundos son el resto del paso a minutos.*/
+	tiempo = tiempo/60;
+	segundos = tiempo % 60;
+	sprintf(subcadena, "%u", segundos);
+	if (segundos <10){
+		horario = ":0" + subcadena + horario;}
+	else {horario = ":" + subcadena + horario;}
+	/*Los minutos son el resto del paso a horas. Las horas se dejan como tal.*/
+	horas = tiempo/60;
+	minutos = tiempo % 60;
+	sprintf(subcadena, "%u", minutos);
+	if (minutos <10){
+		horario = ":0" + subcadena + horario;}
+	else {horario = ":" + subcadena + horario;}
+	sprintf(subcadena, "%u", horas);
+	horario = horas + horario;
+	printf(horario);
+	free(horario);
+}
