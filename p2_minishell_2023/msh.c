@@ -103,6 +103,9 @@ int main(int argc, char* argv[])
 		int status = 0;
 		int command_counter = 0;
 		int in_background = 0;
+        int valor, pipeid0, status;
+        pid_t pid;
+        int pipeid[2];
 		signal(SIGINT, siginthandler);
 
 		// Prompt 
@@ -128,36 +131,62 @@ int main(int argc, char* argv[])
 			if (command_counter > MAX_COMMANDS){
 				printf("Error: Numero máximo de comandos es %d \n", MAX_COMMANDS);
 			}
+            /* Comandos simples */
+            if (command_counter == 1) {
+                pid = fork();
+                switch(pid) {
+                    case '-1':
+                        perror("Error en el fork");
+                        break;
+                    case '0':
+                        execvp(argvv[0][0], argvv[0]);
+                        exit(-1);
+                    case '1':
+                        if (in_background == 0) {
+                            wait(&status); }
+                        break; }}
+            /* Comandos con secuencias de mandatos */
+            else if (command_counter > 1) {
+                for (int p=0; p < command_counter; p++) {
+                    // Si no es el ultimo hijo creo el pipe
+                    if (p != command_counter - 1) {
+                        valor = pipe(pipeid);
+                        if (valor < 0) {
+                            perror("Error al crear la pipe: ");
+                            exit(-1); }}
+                    // Creo el hijo
+                    pid = fork();
+                    if (pid < 0) {
+                        perror("Error en la creacion del hijo: ");
+                        exit(-1); }
+                    // Redirecciono el pipe y limpio el pipe
+                    if (pid == 0) {
+                        if (p != 0) {
+                            close(0);
+                            dup(pipeid0);
+                            close(pipeid0); }
+                        if (p != command_counter - 1) {
+                            close(1);
+                            dup(pipeid[1]);
+                            close(pipeid[0]);
+                            close(pipeid[1]); }
+                        execvp(argvv[p][0], argvv[p]);
+                        perror("execvp: ");
+                        exit(-1)};
+                    else if (pid > 0) {
+                        if (p != command_counter - 1) {
+                            pipeid0 = pipeid[0];
+                            close(pipeid[1]); }
+                        else {
+                            close(pipeid[0]); }}}
+                // El padre esperará por el ultimo hijo solo si no es un proceso en background
+                if (in_background == 0) {
+                    while(pid != wait(&status)); }}
 			else {
 				// Print command
 				print_command(argvv, filev, in_background);
-			} 
-
-			/* Comandos simples */
-			if (command_counter == 1) {
-				int pid;
-				if (in_background == 0) {
-					pid = fork();
-					switch(pid) {
-						case '-1': perror("Error en el fork");
-							   	   break;
-						case '0':  execvp(argvv[0][0], argvv[0]);
-							       exit(-1);
-						case '1':  wait(&status);
-							       break;
-					}
-				}
-				else {
-					pid = fork();
-					switch(pid) {
-						case '-1': perror("Error en el fork");
-							   	   break;
-						case '0':  execvp(argvv[0][0], argvv[0]);
-							       exit(-1);
-					}
-				}
-		
 			}
+
 
 	}
 	
