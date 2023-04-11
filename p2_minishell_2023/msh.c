@@ -198,7 +198,7 @@ int main(int argc, char* argv[])
                 if (strcmp(argvv[0][0], "mycalc") == 0) {
                     mycalc(argvv[0]);
                 }
-                if (strcmp(argvv[0][0], "mytime") == 0) {
+                else if (strcmp(argvv[0][0], "mytime") == 0) {
                     time_in_shell();
                 }
                 else {
