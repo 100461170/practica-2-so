@@ -36,7 +36,7 @@ void siginthandler(int param)
 }
 
 
-/* Timer */
+///* Timer */
 pthread_t timer_thread;
 unsigned long  mytime = 0;
 
@@ -65,7 +65,38 @@ void getCompleteCommand(char*** argvv, int num_command) {
     for ( i = 0; argvv[num_command][i] != NULL; i++)
         argv_execvp[i] = argvv[num_command][i];
 }
-
+int time_in_shell(){
+    // encontrar los tiempos de los segundos, minutos, horas
+    int tiempo_restante = mytime;
+    int horas = mytime/3600000;
+    tiempo_restante = tiempo_restante - (horas*3600000);
+    int minutos = tiempo_restante/60000;
+    tiempo_restante = tiempo_restante - (minutos*60000);
+    int segundos = tiempo_restante/1000;
+    // convertirlos a strings
+    char segundos2[10];
+    char minutos2[10];
+    char horas2[100];
+    // si son menores que 10 hay que agregar "0" a la cadena
+    if (10 > horas){
+        sprintf(horas2, "0%d", horas);
+    } else{
+        sprintf(horas2, "%d", horas);
+    }
+    if (10 > minutos){
+        sprintf(minutos2, "0%d", minutos);
+    } else{
+        sprintf(minutos2, "%d", minutos);
+    }
+    if (10 > segundos){
+        sprintf(segundos2, "0%d", segundos);
+    } else{
+        sprintf(segundos2, "%d", segundos);
+    }
+    // imprimir el resultado en pantalla
+    dprintf(2,"%s:%s:%s\n", horas2, minutos2, segundos2);
+    return 0;
+}
 int mycalc(char *argv[]){
     int resultado, resto, nuevo_acc_int;
     char * Acc;
@@ -166,6 +197,9 @@ int main(int argc, char* argv[])
             if (command_counter == 1) {
                 if (strcmp(argvv[0][0], "mycalc") == 0) {
                     mycalc(argvv[0]);
+                }
+                if (strcmp(argvv[0][0], "mytime") == 0) {
+                    time_in_shell();
                 }
                 else {
                     pid = fork();
