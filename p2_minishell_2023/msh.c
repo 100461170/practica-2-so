@@ -177,15 +177,15 @@ int main(int argc, char* argv[])
                             // Redirecciones
                             if (strcmp(filev[0], "0") != 0) {
                                 close(0);
-                                open(filev[0], O_RDONLY);
+                                open(filev[0], O_RDONLY | O_CREAT, 0644);
                             }
                             if (strcmp(filev[1], "0") != 0) {
                                 close(1);
-                                open(filev[1], O_WRONLY);
+                                open(filev[1], O_WRONLY | O_CREAT, 0644);
                             }
                             if (strcmp(filev[2], "0") != 0) {
                                 close(2);
-                                open(filev[2], O_WRONLY);
+                                open(filev[2], O_WRONLY | O_CREAT, 0644);
                             }
                             execvp(argvv[0][0], argvv[0]);
                             exit(-1);
@@ -213,17 +213,17 @@ int main(int argc, char* argv[])
                         if (p == 0) {
                             if (strcmp(filev[0], "0") != 0) {
                                 close(0);
-                                open(filev[0], O_RDONLY);
+                                open(filev[0], O_RDONLY | O_CREAT, 0644);
                             }
                         }
                         if (p == command_counter - 1) {
                             if (strcmp(filev[1], "0") != 0) {
                                 close(1);
-                                open(filev[1], O_WRONLY);
+                                open(filev[1], O_WRONLY | O_CREAT, 0644);
                             }
                             if (strcmp(filev[2], "0") != 0) {
                                 close(2);
-                                open(filev[2], O_WRONLY);
+                                open(filev[2], O_WRONLY | O_CREAT, 0644);
                             }
                         }
                         if (p != 0) {
