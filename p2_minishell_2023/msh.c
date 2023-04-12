@@ -137,7 +137,7 @@ int mycalc(char *argv[]){
         dprintf(2, "[OK] %s / %s = %d; Resto %d\n", argv[1], argv[3], resultado, resto);
         return 0; }
     else {
-        // Si algo ha fallado porque los argumentos eran erroneos imprimimos el mensaje de error
+        // Si la operacion no era add/mul/div imprimimos el mensaje de error
         printf("[ERROR] La estructura del comando es mycalc <operando_1> <add/mul/div> <operando_2>\n");
         return -1;
     }
