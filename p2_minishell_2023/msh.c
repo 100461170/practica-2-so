@@ -101,31 +101,43 @@ int mycalc(char *argv[]){
     int resultado, resto, nuevo_acc_int;
     char * Acc;
     char nuevo_acc_str[5];
+    // Si el comando es mycalc pero alguno de los argumentos no está bien, arrojamos un error
     if (argv[1] == NULL || argv[2] == NULL || argv[3] == NULL) {
         printf("[ERROR] La estructura del comando es mycalc <operando_1> <add/mul/div> <operando_2>\n");
         return -1;
     }
+    // Comprobamos que operación es:
     if (strcmp(argv[2], "add") == 0) {
+        // Calculamos la operación
         resultado = atoi(argv[1]) + atoi(argv[3]);
+        /* Si estamos en add, hay que crear una variable del entorno 'Acc', que almacenará
+        la suma de resultados de las operaciones de add */
+        // Si no existe ya, se crea 'Acc' con valor 0
         if (getenv("Acc") == NULL) {
             setenv("Acc", "0", 1); }
+        // Cogemos la variable
         Acc = getenv("Acc");
+        // Calculamos su nuevo valor y la actualizamos mediante setenv. Será necesrio que sea un char*
         nuevo_acc_int = atoi(Acc) + resultado;
         sprintf(nuevo_acc_str, "%d", nuevo_acc_int);
         setenv("Acc", nuevo_acc_str, 1);
         Acc = getenv("Acc");
+        // Imprimimos el resultado
         dprintf(2, "[OK] %s + %s = %d; Acc %s\n", argv[1], argv[3], resultado, Acc);
         return 0; }
     else if (strcmp(argv[2], "mul") == 0) {
+        // Calculamos el resultado y lo imprimimos
         resultado = atoi(argv[1]) * atoi(argv[3]);
         dprintf(2, "[OK] %s * %s = %d\n", argv[1], argv[3], resultado);
         return 0; }
     else if (strcmp(argv[2], "div") == 0) {
+        // Calculamos el resultado y el resto y los imprimimos
         resultado = atoi(argv[1]) / atoi(argv[3]);
         resto = atoi(argv[1]) % atoi(argv[3]);
         dprintf(2, "[OK] %s / %s = %d; Resto %d\n", argv[1], argv[3], resultado, resto);
         return 0; }
     else {
+        // Si algo ha fallado porque los argumentos eran erroneos imprimimos el mensaje de error
         printf("[ERROR] La estructura del comando es mycalc <operando_1> <add/mul/div> <operando_2>\n");
         return -1;
     }
@@ -193,22 +205,26 @@ int main(int argc, char* argv[])
             if (command_counter > MAX_COMMANDS) {
                 printf("Error: Numero máximo de comandos es %d \n", MAX_COMMANDS);
             }
-            /* Comandos simples */
+            // Comandos simples
             if (command_counter == 1) {
+                // Hay 2 tipos de comandos simples: los mandatos internos y los normales
+                // Comprobamos primero si se ha llamado a un mandato interno
                 if (strcmp(argvv[0][0], "mycalc") == 0) {
                     mycalc(argvv[0]);
                 }
                 else if (strcmp(argvv[0][0], "mytime") == 0) {
                     time_in_shell();
                 }
+                // Si no es un mandato interno, será un mandato normal
                 else {
+                    // Creamos el proceso hijo
                     pid = fork();
                     switch(pid) {
                         case -1:
                             perror("Error en el fork");
                             break;
                         case 0:
-                            // Redirecciones
+                            // Redirecciones de fichero en caso de que sean necesarias
                             if (strcmp(filev[0], "0") != 0) {
                                 close(0);
                                 open(filev[0], O_RDONLY | O_CREAT, 0644);
@@ -221,14 +237,17 @@ int main(int argc, char* argv[])
                                 close(2);
                                 open(filev[2], O_WRONLY | O_CREAT, 0644);
                             }
+                            // Cambiamos la imagen del proceso por la pedida en el mandato
                             execvp(argvv[0][0], argvv[0]);
                             exit(-1);
                         default:
+                            // Si el proceso no es en background, el padre esperará al proceso hijo
                             if (in_background == 0) {
                                 wait(&status); }
                             break; }}}
-                /* Comandos con secuencias de mandatos */
+            // Comandos con secuencias de mandatos
             else if (command_counter > 1) {
+                // La creacion de las pipes es de forma genérica, para n procesos
                 for (int p=0; p < command_counter; p++) {
                     // Si no es el ultimo hijo creo el pipe
                     if (p != command_counter - 1) {
@@ -241,9 +260,12 @@ int main(int argc, char* argv[])
                     if (pid < 0) {
                         perror("Error en la creacion del hijo: ");
                         exit(-1); }
-                    // Redirecciono el pipe y limpio el pipe
+                    // Redirección y limpieza de la pipe
+                    // Procesos hijo
                     if (pid == 0) {
-                        // Primero redireccionamos, si es necesario, la entrada, salida y salida de errores
+                        /* Primero redireccionamos, si es necesario, la entrada, salida y salida de errores.
+                        En el caso de la redireccion de entrada, se hace en el primer proceso, mientras
+                        que las de salida se hacen en el último */
                         if (p == 0) {
                             if (strcmp(filev[0], "0") != 0) {
                                 close(0);
@@ -260,25 +282,31 @@ int main(int argc, char* argv[])
                                 open(filev[2], O_WRONLY | O_CREAT, 0644);
                             }
                         }
+                        // Si no es el primer proceso cambiamos la entrada estándar a la del pipe
                         if (p != 0) {
                             close(0);
                             dup(pipeid0);
                             close(pipeid0); }
+                        // Si no es el último proceso cambiamos la salida estándar a la del pipe
                         if (p != command_counter - 1) {
                             close(1);
                             dup(pipeid[1]);
                             close(pipeid[0]);
                             close(pipeid[1]); }
+                        // Una vez redireccionada la pipe, cambiamos la imagen del proceso por la del mandato
                         execvp(argvv[p][0], argvv[p]);
                         perror("execvp: ");
                         exit(-1);}
+                    // Proceso padre
                     else {
+                        // Si no estamos en el ultimo proceso clonamos la entrada del pipe para poder reutilizarla
                         if (p != command_counter - 1) {
                             pipeid0 = pipeid[0];
                             close(pipeid[1]); }
+                        // Si es el ultimo cerramos la entrada, cerrando la pipe definitivamente
                         else {
                             close(pipeid[0]); }}}
-                // El padre esperará por el ultimo hijo solo si no es un proceso en background
+                // El padre esperará por el ultimo hijo si no es un proceso en background
                 if (in_background == 0) {
                     while(pid != wait(&status)); }}
         }
