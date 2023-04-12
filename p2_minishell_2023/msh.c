@@ -101,7 +101,7 @@ int mycalc(char *argv[]){
     int resultado, resto, nuevo_acc_int;
     char * Acc;
     char nuevo_acc_str[5];
-    // Si el comando es mycalc pero alguno de los argumentos no está bien, arrojamos un error
+    // Si el comando es mycalc pero alguno de los argumentos no existe, arrojamos un error
     if (argv[1] == NULL || argv[2] == NULL || argv[3] == NULL) {
         printf("[ERROR] La estructura del comando es mycalc <operando_1> <add/mul/div> <operando_2>\n");
         return -1;
