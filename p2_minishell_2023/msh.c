@@ -205,48 +205,49 @@ int main(int argc, char* argv[])
             if (command_counter > MAX_COMMANDS) {
                 printf("Error: Numero máximo de comandos es %d \n", MAX_COMMANDS);
             }
-            // Comandos simples
-            if (command_counter == 1) {
-                // Hay 2 tipos de comandos simples: los mandatos internos y los normales
-                // Comprobamos primero si se ha llamado a un mandato interno
-                if (strcmp(argvv[0][0], "mycalc") == 0) {
-                    mycalc(argvv[0]);
-                }
-                else if (strcmp(argvv[0][0], "mytime") == 0) {
-                    time_in_shell();
-                }
-                // Si no es un mandato interno, será un mandato normal
-                else {
-                    // Creamos el proceso hijo
-                    pid = fork();
-                    switch(pid) {
-                        case -1:
-                            perror("Error en el fork");
-                            break;
-                        case 0:
-                            // Redirecciones de fichero en caso de que sean necesarias
-                            if (strcmp(filev[0], "0") != 0) {
-                                close(0);
-                                open(filev[0], O_RDONLY | O_CREAT, 0644);
-                            }
-                            if (strcmp(filev[1], "0") != 0) {
-                                close(1);
-                                open(filev[1], O_WRONLY | O_CREAT, 0644);
-                            }
-                            if (strcmp(filev[2], "0") != 0) {
-                                close(2);
-                                open(filev[2], O_WRONLY | O_CREAT, 0644);
-                            }
-                            // Cambiamos la imagen del proceso por la pedida en el mandato
-                            execvp(argvv[0][0], argvv[0]);
-                            exit(-1);
-                        default:
-                            // Si el proceso no es en background, el padre esperará al proceso hijo
-                            if (in_background == 0) {
-                                wait(&status); }
-                            break; }}}
-            // Comandos con secuencias de mandatos
-            else if (command_counter > 1) {
+            else {
+                // Comandos simples
+                if (command_counter == 1) {
+                    // Hay 2 tipos de comandos simples: los mandatos internos y los normales
+                    // Comprobamos primero si se ha llamado a un mandato interno
+                    if (strcmp(argvv[0][0], "mycalc") == 0) {
+                        mycalc(argvv[0]);
+                    }
+                    else if (strcmp(argvv[0][0], "mytime") == 0) {
+                        time_in_shell();
+                    }
+                    // Si no es un mandato interno, será un mandato normal
+                    else {
+                        // Creamos el proceso hijo
+                        pid = fork();
+                        switch(pid) {
+                            case -1:
+                                perror("Error en el fork");
+                                break;
+                            case 0:
+                                // Redirecciones de fichero en caso de que sean necesarias
+                                if (strcmp(filev[0], "0") != 0) {
+                                    close(0);
+                                    open(filev[0], O_RDONLY | O_CREAT, 0644);
+                                }
+                                if (strcmp(filev[1], "0") != 0) {
+                                    close(1);
+                                    open(filev[1], O_WRONLY | O_CREAT, 0644);
+                                }
+                                if (strcmp(filev[2], "0") != 0) {
+                                    close(2);
+                                    open(filev[2], O_WRONLY | O_CREAT, 0644);
+                                }
+                                // Cambiamos la imagen del proceso por la pedida en el mandato
+                                execvp(argvv[0][0], argvv[0]);
+                                exit(-1);
+                           default:
+                             // Si el proceso no es en background, el padre esperará al proceso hijo
+                             if (in_background == 0) {
+                                wait(&status);}
+                                break; }}}
+              // Comandos con secuencias de mandatos
+              else if (command_counter > 1) {
                 // La creacion de las pipes es de forma genérica, para n procesos
                 for (int p=0; p < command_counter; p++) {
                     // Si no es el ultimo hijo creo el pipe
@@ -309,8 +310,8 @@ int main(int argc, char* argv[])
                 // El padre esperará por el ultimo hijo si no es un proceso en background
                 if (in_background == 0) {
                     while(pid != wait(&status)); }}
+            }
         }
-
     }
     return 0;
 }
