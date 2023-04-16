@@ -205,130 +205,131 @@ int main(int argc, char* argv[])
             if (command_counter > MAX_COMMANDS) {
                 printf("Error: Numero máximo de comandos es %d \n", MAX_COMMANDS);
             }
-            // Comandos simples
-            if (command_counter == 1) {
-                // Hay 2 tipos de comandos simples: los mandatos internos y los normales
-                // Comprobamos primero si se ha llamado a un mandato interno
-                if (strcmp(argvv[0][0], "mycalc") == 0) {
-                    mycalc(argvv[0]);
-                }
-                else if (strcmp(argvv[0][0], "mytime") == 0) {
-                    time_in_shell();
-                }
-                // Si no es un mandato interno, será un mandato normal
-                else {
-                    // Creamos el proceso hijo
-                    pid = fork();
-                    switch(pid) {
-                        case -1:
-                            perror("Error en el fork");
-                            break;
-                        case 0:
-                            // Redirecciones de fichero en caso de que sean necesarias
-                            if (strcmp(filev[0], "0") != 0) {
-                                close(0);
-                                open(filev[0], O_RDONLY | O_CREAT, 0644);
-                            }
-                            if (strcmp(filev[1], "0") != 0) {
-                                close(1);
-                                open(filev[1], O_WRONLY | O_CREAT, 0644);
-                            }
-                            if (strcmp(filev[2], "0") != 0) {
-                                close(2);
-                                open(filev[2], O_WRONLY | O_CREAT, 0644);
-                            }
-                            // Cambiamos la imagen del proceso por la pedida en el mandato
-                            execvp(argvv[0][0], argvv[0]);
-                            exit(-1);
-                        default:
-                            // Si el proceso no es en background, el padre esperará al proceso hijo
-                            if (in_background == 0) {
-                                // Como puede haber procesos en background vamos a esperar hasta que termine este hijo
-                                // concreto
-                                while(pid != wait(&status));
-                                // Esperamos por el ultimo proceso en background antes del nuevo mandato en foreground,
-                                // para que no se quede zombie
-                                if (pid_b > 0) {
-                                    waitpid(pid_b, &status, 0);
-                                    pid_b = 0;
-                                }
-                                break; }
-                            else {
-                                pid_b = pid;
-                                break;
-                            }}}}
-            // Comandos con secuencias de mandatos
-            else if (command_counter > 1) {
-                // La creacion de las pipes es de forma genérica, para n procesos
-                for (int p=0; p < command_counter; p++) {
-                    // Si no es el ultimo hijo creo el pipe
-                    if (p != command_counter - 1) {
-                        valor = pipe(pipeid);
-                        if (valor < 0) {
-                            perror("Error al crear la pipe: ");
-                            exit(-1); }}
-                    // Creo el hijo
-                    pid = fork();
-                    if (pid < 0) {
-                        perror("Error en la creacion del hijo: ");
-                        exit(-1); }
-                    // Redirección y limpieza de la pipe
-                    // Procesos hijo
-                    if (pid == 0) {
-                        /* Primero redireccionamos, si es necesario, la entrada, salida y salida de errores.
-                        En el caso de la redireccion de entrada, se hace en el primer proceso, mientras
-                        que las de salida se hacen en el último */
-                        if (p == 0) {
-                            if (strcmp(filev[0], "0") != 0) {
-                                close(0);
-                                open(filev[0], O_RDONLY | O_CREAT, 0644);
-                            }
-                        }
-                        if (p == command_counter - 1) {
-                            if (strcmp(filev[1], "0") != 0) {
-                                close(1);
-                                open(filev[1], O_WRONLY | O_CREAT, 0644);
-                            }
-                            if (strcmp(filev[2], "0") != 0) {
-                                close(2);
-                                open(filev[2], O_WRONLY | O_CREAT, 0644);
-                            }
-                        }
-                        // Si no es el primer proceso cambiamos la entrada estándar a la del pipe
-                        if (p != 0) {
-                            close(0);
-                            dup(pipeid0);
-                            close(pipeid0); }
-                        // Si no es el último proceso cambiamos la salida estándar a la del pipe
-                        if (p != command_counter - 1) {
-                            close(1);
-                            dup(pipeid[1]);
-                            close(pipeid[0]);
-                            close(pipeid[1]); }
-                        // Una vez redireccionada la pipe, cambiamos la imagen del proceso por la del mandato
-                        execvp(argvv[p][0], argvv[p]);
-                        perror("execvp: ");
-                        exit(-1);}
-                    // Proceso padre
+            else {
+                // Comandos simples
+                if (command_counter == 1) {
+                    // Hay 2 tipos de comandos simples: los mandatos internos y los normales
+                    // Comprobamos primero si se ha llamado a un mandato interno
+                    if (strcmp(argvv[0][0], "mycalc") == 0) {
+                        mycalc(argvv[0]);
+                    }
+                    else if (strcmp(argvv[0][0], "mytime") == 0) {
+                        time_in_shell();
+                    }
+                    // Si no es un mandato interno, será un mandato normal
                     else {
-                        // Si no estamos en el ultimo proceso clonamos la entrada del pipe para poder reutilizarla
+                        // Creamos el proceso hijo
+                        pid = fork();
+                        switch(pid) {
+                            case -1:
+                                perror("Error en el fork");
+                                break;
+                            case 0:
+                                // Redirecciones de fichero en caso de que sean necesarias
+                                if (strcmp(filev[0], "0") != 0) {
+                                    close(0);
+                                    open(filev[0], O_RDONLY | O_CREAT, 0644);
+                                }
+                                if (strcmp(filev[1], "0") != 0) {
+                                    close(1);
+                                    open(filev[1], O_WRONLY | O_CREAT, 0644);
+                                }
+                                if (strcmp(filev[2], "0") != 0) {
+                                    close(2);
+                                    open(filev[2], O_WRONLY | O_CREAT, 0644);
+                                }
+                                // Cambiamos la imagen del proceso por la pedida en el mandato
+                                execvp(argvv[0][0], argvv[0]);
+                                exit(-1);
+                            default:
+                                // Si el proceso no es en background, el padre esperará al proceso hijo
+                                if (in_background == 0) {
+                                    // Como puede haber procesos en background vamos a esperar hasta que termine este hijo
+                                    // concreto
+                                    while(pid != wait(&status));
+                                    // Esperamos por el ultimo proceso en background antes del nuevo mandato en foreground,
+                                    // para que no se quede zombie
+                                    if (pid_b > 0) {
+                                        waitpid(pid_b, &status, 0);
+                                        pid_b = 0;
+                                    }
+                                    break; }
+                                else {
+                                    pid_b = pid;
+                                    break;
+                                }}}}
+                // Comandos con secuencias de mandatos
+                else if (command_counter > 1) {
+                    // La creacion de las pipes es de forma genérica, para n procesos
+                    for (int p=0; p < command_counter; p++) {
+                        // Si no es el ultimo hijo creo el pipe
                         if (p != command_counter - 1) {
-                            pipeid0 = pipeid[0];
-                            close(pipeid[1]); }
-                        // Si es el ultimo cerramos la entrada, cerrando la pipe definitivamente
+                            valor = pipe(pipeid);
+                            if (valor < 0) {
+                                perror("Error al crear la pipe: ");
+                                exit(-1); }}
+                        // Creo el hijo
+                        pid = fork();
+                        if (pid < 0) {
+                            perror("Error en la creacion del hijo: ");
+                            exit(-1); }
+                        // Redirección y limpieza de la pipe
+                        // Procesos hijo
+                        if (pid == 0) {
+                            /* Primero redireccionamos, si es necesario, la entrada, salida y salida de errores.
+                            En el caso de la redireccion de entrada, se hace en el primer proceso, mientras
+                            que las de salida se hacen en el último */
+                            if (p == 0) {
+                                if (strcmp(filev[0], "0") != 0) {
+                                    close(0);
+                                    open(filev[0], O_RDONLY | O_CREAT, 0644);
+                                }
+                            }
+                            if (p == command_counter - 1) {
+                                if (strcmp(filev[1], "0") != 0) {
+                                    close(1);
+                                    open(filev[1], O_WRONLY | O_CREAT, 0644);
+                                }
+                                if (strcmp(filev[2], "0") != 0) {
+                                    close(2);
+                                    open(filev[2], O_WRONLY | O_CREAT, 0644);
+                                }
+                            }
+                            // Si no es el primer proceso cambiamos la entrada estándar a la del pipe
+                            if (p != 0) {
+                                close(0);
+                                dup(pipeid0);
+                                close(pipeid0); }
+                            // Si no es el último proceso cambiamos la salida estándar a la del pipe
+                            if (p != command_counter - 1) {
+                                close(1);
+                                dup(pipeid[1]);
+                                close(pipeid[0]);
+                                close(pipeid[1]); }
+                            // Una vez redireccionada la pipe, cambiamos la imagen del proceso por la del mandato
+                            execvp(argvv[p][0], argvv[p]);
+                            perror("execvp: ");
+                            exit(-1);}
+                        // Proceso padre
                         else {
-                            close(pipeid[0]); }}}
-                // El padre esperará por el ultimo hijo si no es un proceso en background
-                if (in_background == 0) {
-                    while(pid != wait(&status));
-                    // Esperamos por el ultimo proceso en background antes del nuevo mandato, para que no se quede zombie
-                    if (pid_b > 0) {
-                        waitpid(pid_b, &status, 0);
-                        pid_b = 0;
-                    }}
-                else {
-                    pid_b = pid;
-                }}
+                            // Si no estamos en el ultimo proceso clonamos la entrada del pipe para poder reutilizarla
+                            if (p != command_counter - 1) {
+                                pipeid0 = pipeid[0];
+                                close(pipeid[1]); }
+                            // Si es el ultimo cerramos la entrada, cerrando la pipe definitivamente
+                            else {
+                                close(pipeid[0]); }}}
+                    // El padre esperará por el ultimo hijo si no es un proceso en background
+                    if (in_background == 0) {
+                        while(pid != wait(&status));
+                        // Esperamos por el ultimo proceso en background antes del nuevo mandato, para que no se quede zombie
+                        if (pid_b > 0) {
+                            waitpid(pid_b, &status, 0);
+                            pid_b = 0;
+                        }}
+                    else {
+                        pid_b = pid;
+                    }}}
         }
 
     }
