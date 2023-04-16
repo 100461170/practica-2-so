@@ -199,7 +199,7 @@ int main(int argc, char* argv[])
 
         /************************ STUDENTS CODE ********************************/
         int pipeid[2];
-        pid_t pid;
+        pid_t pid, pid_b;
         int valor, pipeid0;
         if (command_counter > 0) {
             if (command_counter > MAX_COMMANDS) {
@@ -243,8 +243,20 @@ int main(int argc, char* argv[])
                         default:
                             // Si el proceso no es en background, el padre esperará al proceso hijo
                             if (in_background == 0) {
-                                wait(&status); }
-                            break; }}}
+                                // Como puede haber procesos en background vamos a esperar hasta que termine este hijo
+                                // concreto
+                                while(pid != wait(&status));
+                                // Esperamos por el ultimo proceso en background antes del nuevo mandato en foreground,
+                                // para que no se quede zombie
+                                if (pid_b > 0) {
+                                    waitpid(pid_b, &status, 0);
+                                    pid_b = 0;
+                                }
+                                break; }
+                            else {
+                                pid_b = pid;
+                                break;
+                            }}}}
             // Comandos con secuencias de mandatos
             else if (command_counter > 1) {
                 // La creacion de las pipes es de forma genérica, para n procesos
@@ -308,7 +320,15 @@ int main(int argc, char* argv[])
                             close(pipeid[0]); }}}
                 // El padre esperará por el ultimo hijo si no es un proceso en background
                 if (in_background == 0) {
-                    while(pid != wait(&status)); }}
+                    while(pid != wait(&status));
+                    // Esperamos por el ultimo proceso en background antes del nuevo mandato, para que no se quede zombie
+                    if (pid_b > 0) {
+                        waitpid(pid_b, &status, 0);
+                        pid_b = 0;
+                    }}
+                else {
+                    pid_b = pid;
+                }}
         }
 
     }
